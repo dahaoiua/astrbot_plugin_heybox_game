@@ -280,6 +280,13 @@ body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC
 .meta .row { display:flex; font-size:14px; padding:4px 0; }
 .meta .k { width:76px; color:#7f8da2; flex:none; }
 .meta .v { color:#dfe7f2; }
+.pricegrid { display:grid; grid-template-columns:1.05fr 1.55fr 1.2fr; gap:10px; margin-top:14px; }
+.pcol { background:#1d2129; border-radius:10px; padding:12px 14px; }
+.pcol h3 { font-size:12px; color:#7f8da2; font-weight:600; margin-bottom:8px; letter-spacing:1px; }
+.pbig { font-size:24px; font-weight:700; color:#4ade80; line-height:1.1; }
+.pmeta { font-size:11.5px; color:#7f8da2; margin-top:4px; }
+.prow { display:flex; justify-content:space-between; font-size:12px; color:#b9c5d6; padding:3px 0; }
+.prow .dis { color:#ff8a8a; font-weight:600; }
 .req { margin-top:12px; background:#1d2129; border-radius:10px; padding:11px 16px 12px; }
 .req h4 { font-size:12px; color:#7f8da2; font-weight:600; margin-bottom:6px; letter-spacing:1px; }
 .req-cols { display:grid; grid-template-columns:1fr 1fr; gap:0 30px; }
@@ -336,6 +343,42 @@ def render_html(card: CardData) -> str:
         )
         return f'<div class="req-col"><h5>{_esc(title)}</h5>{body}</div>'
 
+    lowest_meta = _esc(card.lowest_date or "")
+    if card.lowest_discount:
+        lowest_meta += f" · -{card.lowest_discount}%"
+    if card.lowest_count:
+        lowest_meta += f" · {card.lowest_count} 次"
+    gap_text = ""
+    try:
+        now_price = float(card.price_now)
+        low_price = float(card.lowest_price)
+        if now_price > low_price > 0:
+            gap_text = f"当前高 {((now_price - low_price) / low_price * 100):.0f}%"
+    except (TypeError, ValueError):
+        pass
+
+    sales_html = "".join(
+        f'<div class="prow"><span>{_esc(x.start)[5:]} ~ {_esc(x.end)[5:]}</span>'
+        f'<span>¥{_esc(x.price)} <span class="dis">-{x.discount}%</span></span></div>'
+        for x in card.sales
+    ) or '<div class="prow"><span>近期无促销</span></div>'
+
+    regions_html = "".join(
+        f'<div class="prow"><span>{_esc(r["name"])}</span><span>¥{_esc(r["price"])}</span></div>'
+        for r in card.regions[:4]
+    ) or '<div class="prow"><span>暂无跨区数据</span></div>'
+
+    price_section = (
+        '<div class="pricegrid">'
+        f'<div class="pcol"><h3>历史最低</h3><div class="pbig">¥{_esc(card.lowest_price or "-")}</div>'
+        f'<div class="pmeta">{lowest_meta}</div>'
+        + (f'<div class="pmeta">{gap_text}</div>' if gap_text else "")
+        + '</div>'
+        f'<div class="pcol"><h3>最近促销</h3>{sales_html}</div>'
+        f'<div class="pcol"><h3>跨区低价</h3>{regions_html}</div>'
+        '</div>'
+    )
+
     if card.req_min or card.req_rec:
         req_html = (
             '<div class="req"><h4>配置要求（Windows）</h4><div class="req-cols">'
@@ -366,6 +409,7 @@ def render_html(card: CardData) -> str:
     <div class="chips">{chips}</div>
     <div class="grid">{cells}</div>
     {meta_html}
+    {price_section}
     {req_html}
     {intro_html}
     <div class="footer"><span>数据来源：小黑盒</span><span>{time.strftime('%Y-%m-%d %H:%M')}</span></div>

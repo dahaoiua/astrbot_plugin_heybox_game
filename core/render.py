@@ -39,9 +39,10 @@ async def render_png(html: str, width: int = 760, scale: float = 2.0, timeout_ms
                 await page.wait_for_timeout(1200)
                 card = await page.query_selector("#card")
                 if card is not None:
-                    await card.screenshot(path=path)
+                    # omit_background=True 保留圆角透明，输出带 alpha 的 PNG
+                    await card.screenshot(path=path, omit_background=True)
                 else:
-                    await page.screenshot(path=path, full_page=True)
+                    await page.screenshot(path=path, full_page=True, omit_background=True)
             finally:
                 await browser.close()
     except RenderError:
