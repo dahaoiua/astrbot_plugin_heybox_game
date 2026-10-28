@@ -179,7 +179,7 @@ class HeyboxGamePlugin(Star):
                 requirements,
                 int(self._cfg("max_regions", 5)),
                 int(self._cfg("max_tags", 8)),
-                int(self._cfg("intro_length", 400)),
+                int(self._cfg("intro_length", 220)),
                 str(self._cfg("req_mode", "compact")),
             )
             html = render_html(card)
@@ -213,7 +213,7 @@ class HeyboxGamePlugin(Star):
             except OSError:
                 pass
 
-    @filter.command("小黑盒价格", alias={"steamprice", "查价", "价格", "xhh价格"})
+    @filter.command("游戏价格", alias={"steamprice", "查价", "价格", "xhh价格", "小黑盒价格"})
     async def heybox_price(self, event: AstrMessageEvent, query: GreedyStr):
         """独立的详细价格卡片：当前价、史低、促销记录、跨区比价。"""
         text = str(query or "").strip()

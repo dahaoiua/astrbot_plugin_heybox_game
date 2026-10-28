@@ -26,8 +26,8 @@
   "intro_length": {
     "description": "简介长度",
     "type": "int",
-    "default": 400,
-    "hint": "0 表示不显示简介。默认 400 字，卡片主要篇幅留给游戏介绍"
+    "default": 220,
+    "hint": "简介字数，默认 220；0 表示不显示"
   },
   "steam_requirements": {
     "description": "Steam 兜底（需代理）",

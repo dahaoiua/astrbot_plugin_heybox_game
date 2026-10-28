@@ -276,10 +276,8 @@ body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC
 .cell { background:#1d2129; border-radius:10px; padding:12px 10px; text-align:center; }
 .cell .v { font-size:19px; font-weight:700; color:#e9eef6; }
 .cell .l { font-size:12px; color:#7f8da2; margin-top:5px; }
-.meta { margin-top:14px; background:#1d2129; border-radius:10px; padding:14px 16px; }
-.meta .row { display:flex; font-size:14px; padding:4px 0; }
-.meta .k { width:76px; color:#7f8da2; flex:none; }
-.meta .v { color:#dfe7f2; }
+.meta { margin-top:12px; display:flex; flex-wrap:wrap; gap:6px 22px; font-size:12.5px; color:#9aa6b8; }
+.meta b { color:#dfe7f2; font-weight:600; }
 .pricegrid { display:grid; grid-template-columns:1.05fr 1.55fr 1.2fr; gap:10px; margin-top:14px; }
 .pcol { background:#1d2129; border-radius:10px; padding:12px 14px; }
 .pcol h3 { font-size:12px; color:#7f8da2; font-weight:600; margin-bottom:8px; letter-spacing:1px; }
@@ -291,11 +289,9 @@ body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC
 .req h4 { font-size:12px; color:#7f8da2; font-weight:600; margin-bottom:6px; letter-spacing:1px; }
 .req-cols { display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
 .req-col h5 { font-size:12.5px; color:#aab6c8; font-weight:700; margin:0 0 5px; }
-/* 每个配置块内部再分两栏：9 项内容高度减半，内容不删 */
-.req-list { column-count:2; column-gap:18px; }
-.req-row { display:flex; gap:4px; font-size:11.5px; line-height:1.5; padding:1.5px 0;
-           color:#b9c5d6; break-inside:avoid; }
-.req-k { color:#7b8798; flex:none; }
+.req-list { display:block; }
+.req-row { display:flex; gap:6px; font-size:12px; line-height:1.55; padding:2px 0; color:#b9c5d6; }
+.req-k { color:#7b8798; flex:none; min-width:52px; }
 .req-v { flex:1; }
 .req .none { color:#6d7889; font-size:13px; }
 .intro { margin-top:12px; font-size:13.5px; color:#b3bfd0; line-height:1.8; }
@@ -326,14 +322,14 @@ def render_html(card: CardData) -> str:
         for c in card.stats
     )
 
-    meta_rows = []
+    meta_bits = []
     if card.release:
-        meta_rows.append(f'<div class="row"><span class="k">发布时间</span><span class="v">{_esc(card.release)}</span></div>')
+        meta_bits.append(f'<span>发布时间 <b>{_esc(card.release)}</b></span>')
     if card.developers:
-        meta_rows.append(f'<div class="row"><span class="k">开发商</span><span class="v">{_esc(card.developers)}</span></div>')
+        meta_bits.append(f'<span>开发商 <b>{_esc(card.developers)}</b></span>')
     if card.publishers:
-        meta_rows.append(f'<div class="row"><span class="k">发行商</span><span class="v">{_esc(card.publishers)}</span></div>')
-    meta_html = f'<div class="meta">{"".join(meta_rows)}</div>' if meta_rows else ""
+        meta_bits.append(f'<span>发行商 <b>{_esc(card.publishers)}</b></span>')
+    meta_html = f'<div class="meta">{"".join(meta_bits)}</div>' if meta_bits else ""
 
     def req_column(title: str, rows: list[tuple[str, str]]) -> str:
         if not rows:
