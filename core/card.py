@@ -52,15 +52,19 @@ class CardData:
     lowest_count: int = 0
 
 
-def _fmt_wan(value: Any) -> str:
+def _fmt_wan(value: Any, unit: str = "") -> str:
+    """在线人数：接口有时给 "1.5"（单位万），有时给 "9376"（原始人数）。"""
     text = str(value or "").strip()
-    if not text:
-        return "-"
-    if text in ("-", "N/A"):
+    if not text or text in ("-", "N/A"):
         return "-"
     if not text.replace(".", "", 1).isdigit():
         return text
-    return f"{text} 万"
+    if unit:
+        return f"{text} {unit}"
+    number = float(text)
+    if number >= 10000:
+        return f"{number / 10000:.1f} 万"
+    return f"{int(number)}" if number.is_integer() else text
 
 
 def _date_from_epoch(value: Any) -> str:
@@ -180,7 +184,14 @@ def build_card(
         if not value or value in ("-", "N/A", ""):
             continue
         if label in ("当前在线", "昨日峰值在线", "小黑盒玩家数"):
-            value = _fmt_wan(value)
+            unit = ""
+            rich = item.get("hb_rich_text") or {}
+            for attr in (rich.get("attrs") or []):
+                piece = str(attr.get("text") or "").strip()
+                if piece in ("万", "亿"):
+                    unit = piece
+                    break
+            value = _fmt_wan(value, unit)
         card.stats.append(StatCell(label=label, value=value))
     card.stats = card.stats[:8]
 
@@ -276,7 +287,8 @@ body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC
 .cell { background:#1d2129; border-radius:10px; padding:12px 10px; text-align:center; }
 .cell .v { font-size:19px; font-weight:700; color:#e9eef6; }
 .cell .l { font-size:12px; color:#7f8da2; margin-top:5px; }
-.meta { margin-top:12px; display:flex; flex-wrap:wrap; gap:6px 22px; font-size:12.5px; color:#9aa6b8; }
+.meta { margin-top:14px; padding-top:12px; border-top:1px solid #262b34;
+         display:flex; flex-wrap:wrap; gap:6px 22px; font-size:12.5px; color:#9aa6b8; }
 .meta b { color:#dfe7f2; font-weight:600; }
 .pricegrid { display:grid; grid-template-columns:1.05fr 1.55fr 1.2fr; gap:10px; margin-top:14px; }
 .pcol { background:#1d2129; border-radius:10px; padding:12px 14px; }
@@ -407,10 +419,10 @@ def render_html(card: CardData) -> str:
     </div>
     <div class="chips">{chips}</div>
     <div class="grid">{cells}</div>
-    {meta_html}
     {price_section}
     {req_html}
     {intro_html}
+    {meta_html}
     <div class="footer"><span>数据来源：小黑盒</span><span>{time.strftime('%Y-%m-%d %H:%M')}</span></div>
   </div>
 </div></body></html>"""
