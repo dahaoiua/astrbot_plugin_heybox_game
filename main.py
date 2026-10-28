@@ -18,7 +18,7 @@ from astrbot.api.star import Context, Star, StarTools, register
 from astrbot.core.star.filter.command import GreedyStr
 
 from .core.api import HeyboxAPI, HeyboxError, extract_appid, pick_game
-from .core.card import build_card, render_html
+from .core.card import build_card, render_html, render_price_html
 from .core.login import LoginState, XiaoheiheLoginClient, generate_qr_png
 from .core.render import RenderError, render_png
 
@@ -115,7 +115,7 @@ class HeyboxGamePlugin(Star):
             raise HeyboxError("小黑盒没有搜到这个游戏")
         return game
 
-    @filter.command("小黑盒", alias={"xhh", "游戏价格", "steamprice", "查价"})
+    @filter.command("小黑盒", alias={"xhh", "游戏"})
     async def heybox_query(self, event: AstrMessageEvent, query: GreedyStr):
         """查询游戏价格并生成卡片图。"""
         text = str(query or "").strip()
@@ -212,6 +212,68 @@ class HeyboxGamePlugin(Star):
                     item.unlink()
             except OSError:
                 pass
+
+    @filter.command("小黑盒价格", alias={"steamprice", "查价", "价格", "xhh价格"})
+    async def heybox_price(self, event: AstrMessageEvent, query: GreedyStr):
+        """独立的详细价格卡片：当前价、史低、促销记录、跨区比价。"""
+        text = str(query or "").strip()
+        if not text:
+            yield event.plain_result("用法：/小黑盒价格 游戏名 或 /小黑盒价格 appid\n\n" + LINK_HINT)
+            return
+        if "http" in text and extract_appid(text) is None:
+            yield event.plain_result("这个链接不是游戏分享链接，我只解析游戏相关链接。\n\n" + LINK_HINT)
+            return
+
+        api = self._api()
+        try:
+            game = await self._resolve(api, text)
+            appid = int(game.get("steam_appid") or game.get("appid") or 0)
+            detail: dict[str, Any] = {}
+            try:
+                detail = await api.detail(appid)
+            except HeyboxError as exc:
+                logger.warning(f"[heybox] 详情获取失败 appid={appid}: {exc}")
+            if not detail:
+                detail = {
+                    "steam_appid": appid,
+                    "name": game.get("name") or f"appid={appid}",
+                    "image": game.get("head_image_616_353") or game.get("image") or "",
+                    "score": game.get("score") or "",
+                    "price": game.get("price") or {},
+                }
+            history = await api.history(appid, int(self._cfg("days", 720)))
+            regions = await api.global_prices(appid)
+            card = build_card(
+                detail,
+                history,
+                regions,
+                {},
+                int(self._cfg("price_max_regions", 15)),
+                int(self._cfg("max_tags", 8)),
+                0,
+                "off",
+                int(self._cfg("price_sales_limit", 8)),
+            )
+            html = render_price_html(card)
+            png = await render_png(html, int(self._cfg("render_width", 760)), float(self._cfg("render_scale", 2.0)))
+            cache_dir = self.data_dir / "cache"
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            keep = cache_dir / f"price_{appid}_{int(time.time())}.png"
+            os.replace(png, keep)
+            png = str(keep)
+            self._clean_cache(cache_dir, int(self._cfg("cache_keep_seconds", 3600)))
+        except HeyboxError as exc:
+            yield event.plain_result(f"查询失败：{exc}")
+            return
+        except RenderError as exc:
+            yield event.plain_result(f"图片渲染失败：{exc}")
+            return
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("heybox price card failed")
+            yield event.plain_result(f"查询失败：{type(exc).__name__}: {exc}")
+            return
+
+        yield event.image_result(png)
 
     # ---------------- 扫码登录 ----------------
 

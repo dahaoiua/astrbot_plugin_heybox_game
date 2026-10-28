@@ -125,7 +125,8 @@ def build_card(
     max_regions: int = 5,
     max_tags: int = 8,
     intro_length: int = 400,
-    req_mode: str = "compact",
+    req_mode: str = "full",
+    sales_limit: int = 3,
 ) -> CardData:
     detail = detail or {}
     price = detail.get("price") or {}
@@ -200,18 +201,17 @@ def build_card(
             card.lowest_count = int(lowest_v2.get("count") or 0)
         except (TypeError, ValueError):
             card.lowest_count = 0
-    card.sales = build_sales(history.get("prices") or [])
+    card.sales = build_sales(history.get("prices") or [], sales_limit)
 
     req = requirements or {}
-    req_mode = (req_mode or "compact").lower()
+    req_mode = (req_mode or "full").lower()
     keep_keys = ("操作系统", "处理器", "内存", "显卡", "存储空间")
     compact_keys = ("处理器", "内存", "显卡", "存储空间")
 
     def pick(rows: list[tuple[str, str]]) -> list[tuple[str, str]]:
-        if req_mode == "full":
+        if req_mode != "compact":
             return rows
-        keys = compact_keys if req_mode == "compact" else keep_keys
-        picked = [(k, v) for k, v in rows if k in keys]
+        picked = [(k, v) for k, v in rows if k in compact_keys]
         return picked or rows[:4]
 
     if req_mode != "off":
@@ -289,10 +289,13 @@ body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC
 .prow .dis { color:#ff8a8a; font-weight:600; }
 .req { margin-top:12px; background:#1d2129; border-radius:10px; padding:11px 16px 12px; }
 .req h4 { font-size:12px; color:#7f8da2; font-weight:600; margin-bottom:6px; letter-spacing:1px; }
-.req-cols { display:grid; grid-template-columns:1fr 1fr; gap:0 30px; }
-.req-col h5 { font-size:12.5px; color:#aab6c8; font-weight:700; margin:0 0 4px; }
-.req-row { display:flex; gap:5px; font-size:12px; line-height:1.55; padding:2px 0; color:#b9c5d6; }
-.req-k { color:#7b8798; flex:none; min-width:44px; }
+.req-cols { display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
+.req-col h5 { font-size:12.5px; color:#aab6c8; font-weight:700; margin:0 0 5px; }
+/* 每个配置块内部再分两栏：9 项内容高度减半，内容不删 */
+.req-list { column-count:2; column-gap:18px; }
+.req-row { display:flex; gap:4px; font-size:11.5px; line-height:1.5; padding:1.5px 0;
+           color:#b9c5d6; break-inside:avoid; }
+.req-k { color:#7b8798; flex:none; }
 .req-v { flex:1; }
 .req .none { color:#6d7889; font-size:13px; }
 .intro { margin-top:12px; font-size:13.5px; color:#b3bfd0; line-height:1.8; }
@@ -341,7 +344,7 @@ def render_html(card: CardData) -> str:
             f'<div class="req-row"><span class="req-v">{_esc(v)}</span></div>'
             for k, v in rows
         )
-        return f'<div class="req-col"><h5>{_esc(title)}</h5>{body}</div>'
+        return f'<div class="req-col"><h5>{_esc(title)}</h5><div class="req-list">{body}</div></div>'
 
     lowest_meta = _esc(card.lowest_date or "")
     if card.lowest_discount:
@@ -414,4 +417,102 @@ def render_html(card: CardData) -> str:
     {intro_html}
     <div class="footer"><span>数据来源：小黑盒</span><span>{time.strftime('%Y-%m-%d %H:%M')}</span></div>
   </div>
+</div></body></html>"""
+
+
+PRICE_CSS = """
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC',sans-serif; }
+#price-card { width:760px; background:#17191e; color:#e9eef6; border-radius:18px; overflow:hidden;
+              border:1px solid #262b34; padding:22px; }
+.head { display:flex; gap:16px; align-items:center; }
+.head img { width:150px; height:84px; object-fit:cover; border-radius:10px; background:#0f1116; }
+.head .name { font-size:26px; font-weight:700; }
+.head .sub { font-size:12.5px; color:#8794a8; margin-top:5px; }
+.big { display:flex; align-items:baseline; gap:14px; margin-top:18px;
+       background:linear-gradient(135deg,#2a2113,#1d1a14); border:1px solid #4a3a1c;
+       border-radius:12px; padding:16px 20px; }
+.big .now { font-size:44px; font-weight:700; color:#ffcc66; }
+.big .old { font-size:17px; color:#8a95a6; text-decoration:line-through; }
+.big .off { font-size:15px; font-weight:700; color:#fff; background:#e5484d; padding:3px 10px; border-radius:7px; }
+.big .tag { font-size:12.5px; color:#9aa6b8; margin-left:auto; }
+.section { margin-top:14px; background:#1d2129; border-radius:12px; padding:14px 16px; }
+.section h3 { font-size:13px; color:#7f8da2; font-weight:600; margin-bottom:10px; letter-spacing:1px; }
+.lowrow { display:flex; align-items:center; gap:16px; }
+.lowrow .p { font-size:30px; font-weight:700; color:#4ade80; }
+.lowrow .m { font-size:13px; color:#9aa6b8; line-height:1.8; }
+.sale { display:flex; justify-content:space-between; font-size:13px; color:#c7d2e0;
+        padding:6px 0; border-bottom:1px dashed #262b34; }
+.sale:last-child { border-bottom:none; }
+.sale .d { color:#ff8a8a; font-weight:600; }
+.empty { font-size:13px; color:#6d7889; }
+.regions { display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
+.reg { display:flex; justify-content:space-between; font-size:13px; padding:5px 0;
+       border-bottom:1px dashed #262b34; color:#c7d2e0; }
+.reg .cc { color:#67758a; font-size:11px; margin-left:6px; }
+.footer { display:flex; justify-content:space-between; font-size:12px; color:#5e6a7c;
+          margin-top:16px; padding-top:12px; border-top:1px solid #262b34; }
+"""
+
+
+def render_price_html(card: CardData) -> str:
+    """独立的详细价格卡片。"""
+    if card.is_free:
+        price_html = '<span class="now">免费</span>'
+    else:
+        price_html = f'<span class="now">¥{_esc(card.price_now or "-")}</span>'
+        if card.price_old and card.price_old != card.price_now:
+            price_html += f'<span class="old">¥{_esc(card.price_old)}</span>'
+        if card.discount > 0:
+            price_html += f'<span class="off">-{card.discount}%</span>'
+
+    gap_text = ""
+    try:
+        now_price = float(card.price_now)
+        low_price = float(card.lowest_price)
+        if now_price > low_price > 0:
+            gap_text = f"当前价比史高高 {((now_price - low_price) / low_price * 100):.0f}%"
+        elif now_price <= low_price:
+            gap_text = "当前就是史低"
+    except (TypeError, ValueError):
+        pass
+
+    lowest_meta = []
+    if card.lowest_date:
+        lowest_meta.append(f"日期 {card.lowest_date}")
+    if card.lowest_discount:
+        lowest_meta.append(f"折扣 -{card.lowest_discount}%")
+    if card.lowest_count:
+        lowest_meta.append(f"出现过 {card.lowest_count} 次")
+    if gap_text:
+        lowest_meta.append(gap_text)
+
+    sales_html = "".join(
+        f'<div class="sale"><span>{_esc(x.start)} ~ {_esc(x.end)}（{x.days} 天）</span>'
+        f'<span>¥{_esc(x.price)} <span class="d">-{x.discount}%</span></span></div>'
+        for x in card.sales
+    ) or '<div class="empty">暂无促销记录</div>'
+
+    regions_html = "".join(
+        f'<div class="reg"><span>{_esc(r["name"])}<span class="cc">{_esc(r["cc"])}</span></span>'
+        f'<span>¥{_esc(r["price"])}</span></div>'
+        for r in card.regions
+    ) or '<div class="empty">暂无跨区数据</div>'
+
+    cover = f'<img src="{_esc(card.cover)}" />' if card.cover else ""
+    return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>{PRICE_CSS}</style></head>
+<body><div id="price-card">
+  <div class="head">{cover}
+    <div><div class="name">{_esc(card.name)}</div>
+      <div class="sub">Steam AppID {card.appid}{(" · 小黑盒评分 " + _esc(card.score)) if card.score else ""}</div>
+    </div>
+  </div>
+  <div class="big">{price_html}<span class="tag">历史最低 ¥{_esc(card.lowest_price or "-")}</span></div>
+  <div class="section"><h3>历史最低</h3>
+    <div class="lowrow"><span class="p">¥{_esc(card.lowest_price or "-")}</span>
+      <span class="m">{' · '.join(_esc(x) for x in lowest_meta) or '-'}</span></div>
+  </div>
+  <div class="section"><h3>促销记录（{len(card.sales)}）</h3>{sales_html}</div>
+  <div class="section"><h3>跨区比价（{len(card.regions)}）</h3><div class="regions">{regions_html}</div></div>
+  <div class="footer"><span>数据来源：小黑盒</span><span>{time.strftime('%Y-%m-%d %H:%M')}</span></div>
 </div></body></html>"""

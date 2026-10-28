@@ -84,13 +84,24 @@
   "req_mode": {
     "description": "配置要求显示方式",
     "type": "string",
-    "default": "compact",
-    "hint": "compact-只显示处理器/内存/显卡/存储（默认）；full-完整两列；off-不显示",
+    "default": "full",
+    "hint": "full-完整内容，内部两栏排版（默认）；compact-只显示处理器/内存/显卡/存储；off-不显示",
     "_special": "select",
     "options": [
       "compact",
       "full",
       "off"
     ]
+  },
+  "price_max_regions": {
+    "description": "价格卡片的跨区数量",
+    "type": "int",
+    "default": 15,
+    "hint": "仅 /小黑盒价格 的独立价格卡片使用"
+  },
+  "price_sales_limit": {
+    "description": "价格卡片的促销记录条数",
+    "type": "int",
+    "default": 8
   }
 }
