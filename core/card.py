@@ -41,8 +41,8 @@ class CardData:
     release: str = ""
     developers: str = ""
     publishers: str = ""
-    req_minimum: str = ""
-    req_recommended: str = ""
+    req_min: list[tuple[str, str]] = field(default_factory=list)
+    req_rec: list[tuple[str, str]] = field(default_factory=list)
     intro: str = ""
     sales: list[SaleSegment] = field(default_factory=list)
     regions: list[dict[str, Any]] = field(default_factory=list)
@@ -175,9 +175,11 @@ def build_card(
         value = str(item.get("value") or "").strip()
         if not label:
             continue
+        if not value or value in ("-", "N/A", ""):
+            continue
         if label in ("当前在线", "昨日峰值在线", "小黑盒玩家数"):
             value = _fmt_wan(value)
-        card.stats.append(StatCell(label=label, value=value or "-"))
+        card.stats.append(StatCell(label=label, value=value))
     card.stats = card.stats[:8]
 
     history = history or {}
@@ -200,8 +202,8 @@ def build_card(
     card.sales = build_sales(history.get("prices") or [])
 
     req = requirements or {}
-    card.req_minimum = str(req.get("minimum") or "")
-    card.req_recommended = str(req.get("recommended") or "")
+    card.req_min = list(req.get("minimum") or [])
+    card.req_rec = list(req.get("recommended") or [])
     if not card.developers:
         card.developers = ", ".join(req.get("developers") or [])
     if not card.publishers:
@@ -267,8 +269,14 @@ body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC
 .meta .v { color:#dfe7f2; }
 .req { margin-top:12px; background:#1d2129; border-radius:10px; padding:14px 16px; }
 .req h4 { font-size:13px; color:#7f8da2; font-weight:600; margin-bottom:8px; letter-spacing:1px; }
-.req p { font-size:13.5px; color:#d6dfec; line-height:1.7; white-space:pre-wrap; }
-.req .none { color:#6d7889; }
+.req-cols { display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
+.req-col h5 { font-size:14px; color:#e9eef6; font-weight:700; margin:2px 0 10px; }
+.req-row { display:flex; gap:6px; font-size:13px; line-height:1.65; padding:5px 0;
+           border-bottom:1px dashed #262b34; color:#cdd7e5; }
+.req-row:last-child { border-bottom:none; }
+.req-k { color:#8b98ab; flex:none; }
+.req-v { flex:1; }
+.req .none { color:#6d7889; font-size:13px; }
 .intro { margin-top:12px; font-size:13.5px; color:#aab6c8; line-height:1.75; }
 .footer { display:flex; justify-content:space-between; font-size:12px; color:#5e6a7c;
           margin-top:16px; padding-top:12px; border-top:1px solid #262b34; }
@@ -306,15 +314,26 @@ def render_html(card: CardData) -> str:
         meta_rows.append(f'<div class="row"><span class="k">发行商</span><span class="v">{_esc(card.publishers)}</span></div>')
     meta_html = f'<div class="meta">{"".join(meta_rows)}</div>' if meta_rows else ""
 
-    if card.req_minimum or card.req_recommended:
-        req_body = ""
-        if card.req_minimum:
-            req_body += f'<p><b style="color:#9fb0c7">最低配置</b><br>{_esc(card.req_minimum)}</p>'
-        if card.req_recommended:
-            req_body += f'<p style="margin-top:10px"><b style="color:#9fb0c7">推荐配置</b><br>{_esc(card.req_recommended)}</p>'
-        req_html = f'<div class="req"><h4>配置要求</h4>{req_body}</div>'
+    def req_column(title: str, rows: list[tuple[str, str]]) -> str:
+        if not rows:
+            return f'<div class="req-col"><h5>{_esc(title)}</h5><div class="none">无</div></div>'
+        body = "".join(
+            f'<div class="req-row"><span class="req-k">{_esc(k)}</span>'
+            f'<span class="req-v">{_esc(v)}</span></div>' if k else
+            f'<div class="req-row"><span class="req-v">{_esc(v)}</span></div>'
+            for k, v in rows
+        )
+        return f'<div class="req-col"><h5>{_esc(title)}</h5>{body}</div>'
+
+    if card.req_min or card.req_rec:
+        req_html = (
+            '<div class="req"><h4>配置要求（Windows）</h4><div class="req-cols">'
+            + req_column("最低配置", card.req_min)
+            + req_column("推荐配置", card.req_rec)
+            + "</div></div>"
+        )
     else:
-        req_html = '<div class="req"><h4>配置要求</h4><p class="none">暂无数据（Steam 商店接口在本机不可达）</p></div>'
+        req_html = '<div class="req"><h4>配置要求</h4><p class="none">暂无数据</p></div>'
 
     intro_html = f'<div class="intro">{_esc(card.intro)}</div>' if card.intro else ""
     score_html = (

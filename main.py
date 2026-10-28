@@ -158,10 +158,20 @@ class HeyboxGamePlugin(Star):
                 logger.warning(f"[heybox] 跨区价格获取失败 appid={appid}: {exc}")
 
             requirements: dict[str, Any] = {}
-            if bool(self._cfg("steam_requirements", True)):
-                requirements = await api.steam_requirements(
-                    appid, float(self._cfg("requirements_timeout", 4))
-                )
+            if bool(self._cfg("show_requirements", True)):
+                try:
+                    requirements = await api.hardware_requirements(appid)
+                except HeyboxError as exc:
+                    logger.warning(f"[heybox] 配置要求获取失败 appid={appid}: {exc}")
+                if not requirements and bool(self._cfg("steam_requirements", False)):
+                    steam = await api.steam_requirements(
+                        appid, float(self._cfg("requirements_timeout", 4))
+                    )
+                    if steam:
+                        requirements = {
+                            "minimum": [("", steam.get("minimum") or "")],
+                            "recommended": [("", steam.get("recommended") or "")],
+                        }
             card = build_card(
                 detail,
                 history,

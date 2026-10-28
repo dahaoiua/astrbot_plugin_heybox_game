@@ -30,10 +30,10 @@
     "hint": "0 表示不显示简介"
   },
   "steam_requirements": {
-    "description": "尝试获取配置要求",
+    "description": "Steam 兜底（需代理）",
     "type": "bool",
-    "default": true,
-    "hint": "从小黑盒拿不到配置要求，会尽力请求 Steam 商店接口；不可达时显示暂无"
+    "default": false,
+    "hint": "小黑盒拿不到配置要求时，才尝试 Steam 商店接口；服务器不可达 Steam 时无效果"
   },
   "requirements_timeout": {
     "description": "配置要求请求超时（秒）",
@@ -74,5 +74,11 @@
     "type": "string",
     "default": "",
     "hint": "如 http://127.0.0.1:7890。小黑盒不需要代理；配置后才会用它去请求 Steam 拿配置要求。"
+  },
+  "show_requirements": {
+    "description": "显示配置要求",
+    "type": "bool",
+    "default": true,
+    "hint": "来自小黑盒硬件配置接口（最低/推荐配置），统一按两列排版"
   }
 }

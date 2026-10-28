@@ -65,6 +65,33 @@ def pick_game(games: list[dict[str, Any]], query: str) -> dict[str, Any] | None:
     return games[0]
 
 
+def _parse_req_html(value: str) -> list[tuple[str, str]]:
+    """把配置要求 HTML 解析成 [(标签, 内容)]。
+
+    HTML 形如：<strong>最低配置:</strong><br><ul><li>操作系统: Windows 10<br></li>...
+    """
+    import re as _re
+    text = str(value or "")
+    items = _re.findall(r"<li>(.*?)</li>", text, flags=_re.S | _re.I)
+    if not items:
+        items = [_re.sub(r"<br\s*/?>", "\n", text, flags=_re.I)]
+    rows: list[tuple[str, str]] = []
+    for item in items:
+        label = ""
+        m = _re.search(r"<strong>(.*?)</strong>", item, flags=_re.S | _re.I)
+        if m:
+            label = html_module.unescape(_re.sub(r"<[^>]+>", "", m.group(1))).strip().rstrip(":：")
+            item = item[m.end():]
+        body = _re.sub(r"<[^>]+>", "", item)
+        body = html_module.unescape(body).replace("\u00a0", " ")
+        body = " ".join(body.split())
+        if label and body:
+            rows.append((label, body))
+        elif body and not label:
+            rows.append(("", body))
+    return rows[:12]
+
+
 def _strip_html(value: str) -> str:
     """Steam 的配置要求是 HTML 片段，转成纯文本。"""
     text = re.sub(r"<br\s*/?>", "\n", str(value or ""), flags=re.I)
@@ -125,6 +152,27 @@ class HeyboxAPI:
         data = await self._get("/game/get_game_detail/", params, appid)
         result = data.get("result")
         return result if isinstance(result, dict) else {}
+
+    async def hardware_requirements(self, appid: int) -> dict[str, Any]:
+        """小黑盒硬件配置页的数据：最低配置 / 推荐配置（HTML）。"""
+        data = await self._get(
+            "/pc/get_game_hardware_performance_board/",
+            {"steam_app_id": str(appid)},
+            appid,
+        )
+        result = data.get("result") or {}
+        if not isinstance(result, dict):
+            return {}
+        req = result.get("hardware_requirements") or {}
+        if not isinstance(req, dict):
+            return {}
+        windows = req.get("windows_requirements") or {}
+        if not isinstance(windows, dict):
+            windows = {}
+        return {
+            "minimum": _parse_req_html(windows.get("minimum") or ""),
+            "recommended": _parse_req_html(windows.get("recommended") or ""),
+        }
 
     async def steam_requirements(self, appid: int, timeout: float = 4.0) -> dict[str, Any]:
         """尽力从 Steam 拿配置要求；本机通常不可达，超时就直接放弃。"""
