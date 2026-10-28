@@ -24,10 +24,10 @@
     "hint": "游戏标签最多显示几个"
   },
   "intro_length": {
-    "description": "简介截断长度",
+    "description": "简介长度",
     "type": "int",
-    "default": 120,
-    "hint": "0 表示不显示简介"
+    "default": 400,
+    "hint": "0 表示不显示简介。默认 400 字，卡片主要篇幅留给游戏介绍"
   },
   "steam_requirements": {
     "description": "Steam 兜底（需代理）",
@@ -80,5 +80,17 @@
     "type": "bool",
     "default": true,
     "hint": "来自小黑盒硬件配置接口（最低/推荐配置），统一按两列排版"
+  },
+  "req_mode": {
+    "description": "配置要求显示方式",
+    "type": "string",
+    "default": "compact",
+    "hint": "compact-只显示处理器/内存/显卡/存储（默认）；full-完整两列；off-不显示",
+    "_special": "select",
+    "options": [
+      "compact",
+      "full",
+      "off"
+    ]
   }
 }

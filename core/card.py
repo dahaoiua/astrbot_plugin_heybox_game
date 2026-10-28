@@ -124,7 +124,8 @@ def build_card(
     requirements: dict[str, Any] | None = None,
     max_regions: int = 5,
     max_tags: int = 8,
-    intro_length: int = 120,
+    intro_length: int = 400,
+    req_mode: str = "compact",
 ) -> CardData:
     detail = detail or {}
     price = detail.get("price") or {}
@@ -202,8 +203,20 @@ def build_card(
     card.sales = build_sales(history.get("prices") or [])
 
     req = requirements or {}
-    card.req_min = list(req.get("minimum") or [])
-    card.req_rec = list(req.get("recommended") or [])
+    req_mode = (req_mode or "compact").lower()
+    keep_keys = ("操作系统", "处理器", "内存", "显卡", "存储空间")
+    compact_keys = ("处理器", "内存", "显卡", "存储空间")
+
+    def pick(rows: list[tuple[str, str]]) -> list[tuple[str, str]]:
+        if req_mode == "full":
+            return rows
+        keys = compact_keys if req_mode == "compact" else keep_keys
+        picked = [(k, v) for k, v in rows if k in keys]
+        return picked or rows[:4]
+
+    if req_mode != "off":
+        card.req_min = pick(list(req.get("minimum") or []))
+        card.req_rec = pick(list(req.get("recommended") or []))
     if not card.developers:
         card.developers = ", ".join(req.get("developers") or [])
     if not card.publishers:
@@ -267,17 +280,15 @@ body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC
 .meta .row { display:flex; font-size:14px; padding:4px 0; }
 .meta .k { width:76px; color:#7f8da2; flex:none; }
 .meta .v { color:#dfe7f2; }
-.req { margin-top:12px; background:#1d2129; border-radius:10px; padding:14px 16px; }
-.req h4 { font-size:13px; color:#7f8da2; font-weight:600; margin-bottom:8px; letter-spacing:1px; }
-.req-cols { display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
-.req-col h5 { font-size:14px; color:#e9eef6; font-weight:700; margin:2px 0 10px; }
-.req-row { display:flex; gap:6px; font-size:13px; line-height:1.65; padding:5px 0;
-           border-bottom:1px dashed #262b34; color:#cdd7e5; }
-.req-row:last-child { border-bottom:none; }
-.req-k { color:#8b98ab; flex:none; }
+.req { margin-top:12px; background:#1d2129; border-radius:10px; padding:11px 16px 12px; }
+.req h4 { font-size:12px; color:#7f8da2; font-weight:600; margin-bottom:6px; letter-spacing:1px; }
+.req-cols { display:grid; grid-template-columns:1fr 1fr; gap:0 30px; }
+.req-col h5 { font-size:12.5px; color:#aab6c8; font-weight:700; margin:0 0 4px; }
+.req-row { display:flex; gap:5px; font-size:12px; line-height:1.55; padding:2px 0; color:#b9c5d6; }
+.req-k { color:#7b8798; flex:none; min-width:44px; }
 .req-v { flex:1; }
 .req .none { color:#6d7889; font-size:13px; }
-.intro { margin-top:12px; font-size:13.5px; color:#aab6c8; line-height:1.75; }
+.intro { margin-top:12px; font-size:13.5px; color:#b3bfd0; line-height:1.8; }
 .footer { display:flex; justify-content:space-between; font-size:12px; color:#5e6a7c;
           margin-top:16px; padding-top:12px; border-top:1px solid #262b34; }
 """

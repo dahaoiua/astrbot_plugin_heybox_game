@@ -179,7 +179,8 @@ class HeyboxGamePlugin(Star):
                 requirements,
                 int(self._cfg("max_regions", 5)),
                 int(self._cfg("max_tags", 8)),
-                int(self._cfg("intro_length", 120)),
+                int(self._cfg("intro_length", 400)),
+                str(self._cfg("req_mode", "compact")),
             )
             html = render_html(card)
             png = await render_png(html, int(self._cfg("render_width", 760)), float(self._cfg("render_scale", 2.0)))
