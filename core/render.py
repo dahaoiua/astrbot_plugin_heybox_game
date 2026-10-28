@@ -9,7 +9,7 @@ class RenderError(RuntimeError):
     pass
 
 
-async def render_png(html: str, width: int = 760, timeout_ms: int = 30000) -> str:
+async def render_png(html: str, width: int = 760, scale: float = 2.0, timeout_ms: int = 30000) -> str:
     try:
         from playwright.async_api import async_playwright
     except ImportError as exc:  # noqa: BLE001
@@ -32,7 +32,7 @@ async def render_png(html: str, width: int = 760, timeout_ms: int = 30000) -> st
             try:
                 page = await browser.new_page(
                     viewport={"width": width + 4, "height": 900},
-                    device_scale_factor=2,
+                    device_scale_factor=max(1.0, float(scale)),
                 )
                 await page.set_content(html, wait_until="load", timeout=timeout_ms)
                 # 等封面图、字体就位

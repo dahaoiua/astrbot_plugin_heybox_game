@@ -88,7 +88,11 @@ class HeyboxGamePlugin(Star):
         return "; ".join(parts)
 
     def _api(self) -> HeyboxAPI:
-        return HeyboxAPI(self._cookie_header(), int(self._cfg("timeout", 20)))
+        return HeyboxAPI(
+            self._cookie_header(),
+            int(self._cfg("timeout", 20)),
+            str(self._cfg("proxy", "") or ""),
+        )
 
     # ---------------- 查询 ----------------
 
@@ -126,6 +130,21 @@ class HeyboxGamePlugin(Star):
         try:
             game = await self._resolve(api, text)
             appid = int(game.get("steam_appid") or game.get("appid") or 0)
+            detail: dict[str, Any] = {}
+            try:
+                detail = await api.detail(appid)
+            except HeyboxError as exc:
+                logger.warning(f"[heybox] 详情获取失败 appid={appid}: {exc}")
+            if not detail:
+                # 详情失败时用搜索结果兜底，至少能出价格
+                detail = {
+                    "steam_appid": appid,
+                    "name": game.get("name") or f"appid={appid}",
+                    "image": game.get("head_image_616_353") or game.get("image") or "",
+                    "score": game.get("score") or "",
+                    "price": game.get("price") or {},
+                    "common_tags": [{"desc": game.get("core_tags_str") or ""}],
+                }
             days = int(self._cfg("days", 720))
             history: dict[str, Any] = {}
             regions: list[dict[str, Any]] = []
@@ -138,15 +157,28 @@ class HeyboxGamePlugin(Star):
             except HeyboxError as exc:
                 logger.warning(f"[heybox] 跨区价格获取失败 appid={appid}: {exc}")
 
-            card = build_card(game, history, regions, int(self._cfg("max_regions", 5)))
+            requirements: dict[str, Any] = {}
+            if bool(self._cfg("steam_requirements", True)):
+                requirements = await api.steam_requirements(
+                    appid, float(self._cfg("requirements_timeout", 4))
+                )
+            card = build_card(
+                detail,
+                history,
+                regions,
+                requirements,
+                int(self._cfg("max_regions", 5)),
+                int(self._cfg("max_tags", 8)),
+                int(self._cfg("intro_length", 120)),
+            )
             html = render_html(card)
-            png = await render_png(html, int(self._cfg("render_width", 760)))
+            png = await render_png(html, int(self._cfg("render_width", 760)), float(self._cfg("render_scale", 2.0)))
             cache_dir = self.data_dir / "cache"
             cache_dir.mkdir(parents=True, exist_ok=True)
             keep = cache_dir / f"card_{appid}_{int(time.time())}.png"
             os.replace(png, keep)
             png = str(keep)
-            self._clean_cache(cache_dir)
+            self._clean_cache(cache_dir, int(self._cfg("cache_keep_seconds", 3600)))
         except HeyboxError as exc:
             yield event.plain_result(f"查询失败：{exc}")
             return

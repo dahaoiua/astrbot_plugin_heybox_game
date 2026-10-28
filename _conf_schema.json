@@ -2,32 +2,77 @@
   "cookies": {
     "description": "小黑盒 Cookie",
     "type": "text",
-    "hint": "格式：user_pkey=xxx; heybox_id=123。留空则只抓公开数据；扫码登录后会自动写入。",
+    "hint": "格式：user_pkey=xxx; heybox_id=123。留空则使用扫码登录保存的凭证，再没有就只抓公开数据。",
     "default": ""
   },
   "days": {
-    "description": "历史价格天数",
+    "description": "历史价格回溯天数",
     "type": "int",
-    "default": 720
+    "default": 720,
+    "hint": "影响史低与促销记录的统计范围"
   },
   "max_regions": {
     "description": "跨区比价显示数量",
     "type": "int",
-    "default": 5
+    "default": 5,
+    "hint": "卡片里展示多少个低价区服"
+  },
+  "max_tags": {
+    "description": "标签显示数量",
+    "type": "int",
+    "default": 8,
+    "hint": "游戏标签最多显示几个"
+  },
+  "intro_length": {
+    "description": "简介截断长度",
+    "type": "int",
+    "default": 120,
+    "hint": "0 表示不显示简介"
+  },
+  "steam_requirements": {
+    "description": "尝试获取配置要求",
+    "type": "bool",
+    "default": true,
+    "hint": "从小黑盒拿不到配置要求，会尽力请求 Steam 商店接口；不可达时显示暂无"
+  },
+  "requirements_timeout": {
+    "description": "配置要求请求超时（秒）",
+    "type": "float",
+    "default": 4.0,
+    "hint": "Steam 接口不可达时，超时会拖慢出图，建议 3-5 秒"
   },
   "timeout": {
-    "description": "请求超时（秒）",
+    "description": "小黑盒请求超时（秒）",
     "type": "int",
     "default": 20
   },
   "render_width": {
     "description": "卡片宽度（像素）",
     "type": "int",
-    "default": 760
+    "default": 760,
+    "hint": "渲染宽度，实际输出为 2 倍分辨率"
+  },
+  "render_scale": {
+    "description": "渲染倍率",
+    "type": "float",
+    "default": 2.0,
+    "hint": "2.0 表示 2 倍分辨率，越大越清晰也越慢"
+  },
+  "cache_keep_seconds": {
+    "description": "卡片缓存保留时间（秒）",
+    "type": "int",
+    "default": 3600,
+    "hint": "生成过的图片保留多久，过期自动清理"
   },
   "admin_only_login": {
-    "description": "仅管理员可触发扫码登录",
+    "description": "仅管理员可扫码登录",
     "type": "bool",
     "default": true
+  },
+  "proxy": {
+    "description": "代理地址",
+    "type": "string",
+    "default": "",
+    "hint": "如 http://127.0.0.1:7890。小黑盒不需要代理；配置后才会用它去请求 Steam 拿配置要求。"
   }
 }

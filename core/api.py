@@ -9,10 +9,13 @@
 """
 from __future__ import annotations
 
+import html as html_module
 import re
 from typing import Any
 
 import aiohttp
+
+from .login import WEB_CLIENT_PARAMS, _sign_params
 
 BASE = "https://api.xiaoheihe.cn"
 UA = (
@@ -62,10 +65,21 @@ def pick_game(games: list[dict[str, Any]], query: str) -> dict[str, Any] | None:
     return games[0]
 
 
+def _strip_html(value: str) -> str:
+    """Steam 的配置要求是 HTML 片段，转成纯文本。"""
+    text = re.sub(r"<br\s*/?>", "\n", str(value or ""), flags=re.I)
+    text = re.sub(r"</li>", "\n", text, flags=re.I)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = html_module.unescape(text)
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return "；".join(lines[:8])
+
+
 class HeyboxAPI:
-    def __init__(self, cookie: str = "", timeout: int = 20) -> None:
+    def __init__(self, cookie: str = "", timeout: int = 20, proxy: str = "") -> None:
         self.cookie = (cookie or "").strip()
         self.timeout = timeout
+        self.proxy = (proxy or "").strip()
 
     def _headers(self, appid: int | None = None) -> dict[str, str]:
         referer = "https://www.xiaoheihe.cn/"
@@ -86,7 +100,10 @@ class HeyboxAPI:
         timeout = aiohttp.ClientTimeout(total=self.timeout)
         try:
             async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(url, params=params, headers=self._headers(appid)) as resp:
+                async with session.get(
+                    url, params=params, headers=self._headers(appid),
+                    proxy=self.proxy or None,
+                ) as resp:
                     if resp.status != 200:
                         raise HeyboxError(f"HTTP {resp.status}: {path}")
                     payload = await resp.json(content_type=None)
@@ -97,6 +114,47 @@ class HeyboxAPI:
         if not isinstance(payload, dict):
             raise HeyboxError("返回格式异常")
         return payload
+
+    async def detail(self, appid: int) -> dict[str, Any]:
+        """游戏详情（需要签名）：名称、评分、标签、价格、统计数据、发布时间/开发商/发行商。"""
+        params = _sign_params(
+            "/game/get_game_detail/",
+            {**WEB_CLIENT_PARAMS, "steam_appid": str(appid)},
+            "",
+        )
+        data = await self._get("/game/get_game_detail/", params, appid)
+        result = data.get("result")
+        return result if isinstance(result, dict) else {}
+
+    async def steam_requirements(self, appid: int, timeout: float = 4.0) -> dict[str, Any]:
+        """尽力从 Steam 拿配置要求；本机通常不可达，超时就直接放弃。"""
+        url = "https://store.steampowered.com/api/appdetails"
+        try:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=timeout)
+            ) as session:
+                async with session.get(
+                    url,
+                    params={"appids": appid, "l": "schinese", "cc": "cn"},
+                    proxy=self.proxy or None,
+                ) as resp:
+                    if resp.status != 200:
+                        return {}
+                    payload = await resp.json(content_type=None)
+        except Exception:  # noqa: BLE001
+            return {}
+        entry = (payload or {}).get(str(appid)) or {}
+        if not entry.get("success"):
+            return {}
+        data = entry.get("data") or {}
+        req = data.get("pc_requirements") or {}
+        return {
+            "minimum": _strip_html(req.get("minimum") or ""),
+            "recommended": _strip_html(req.get("recommended") or ""),
+            "developers": data.get("developers") or [],
+            "publishers": data.get("publishers") or [],
+            "release_date": (data.get("release_date") or {}).get("date", ""),
+        }
 
     async def search(self, query: str) -> list[dict[str, Any]]:
         data = await self._get("/game/search/", {"q": query, "lang": "zh-cn", "os_type": "web"})
