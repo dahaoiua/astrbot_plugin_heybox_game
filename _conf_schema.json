@@ -1,0 +1,33 @@
+{
+  "cookies": {
+    "description": "小黑盒 Cookie",
+    "type": "text",
+    "hint": "格式：user_pkey=xxx; heybox_id=123。留空则只抓公开数据；扫码登录后会自动写入。",
+    "default": ""
+  },
+  "days": {
+    "description": "历史价格天数",
+    "type": "int",
+    "default": 720
+  },
+  "max_regions": {
+    "description": "跨区比价显示数量",
+    "type": "int",
+    "default": 5
+  },
+  "timeout": {
+    "description": "请求超时（秒）",
+    "type": "int",
+    "default": 20
+  },
+  "render_width": {
+    "description": "卡片宽度（像素）",
+    "type": "int",
+    "default": 760
+  },
+  "admin_only_login": {
+    "description": "仅管理员可触发扫码登录",
+    "type": "bool",
+    "default": true
+  }
+}

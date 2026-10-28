@@ -1,0 +1,8 @@
+name: astrbot_plugin_heybox_game
+display_name: 小黑盒游戏卡片
+desc: 输入游戏名 / appid / 小黑盒或 Steam 游戏链接，抓取小黑盒数据并绘制成卡片图片（价格、史低、促销、跨区、评分）。
+short_desc: 小黑盒游戏价格卡片（图片输出）。
+author: dahaoiua
+version: 1.0.0
+repo: https://github.com/dahaoiua/astrbot_plugin_heybox_game
+astrbot_version: ">=4.26.1"
