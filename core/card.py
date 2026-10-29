@@ -262,61 +262,96 @@ def build_card(
 CSS = """
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC',sans-serif; }
-#card { width:760px; background:#17191e; color:#e9eef6; border-radius:18px; overflow:hidden;
-        border:1px solid #262b34; }
-.cover { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; background:#0f1116; }
+#card { width:760px; background:$card_bg; color:$text; border-radius:18px; overflow:hidden;
+        border:1px solid $border; }
+.cover { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; background:$img_bg; }
 .body { padding:20px 22px 18px; }
 .pricebar { display:flex; align-items:center; justify-content:space-between;
-            background:#22262e; border-radius:10px; padding:14px 18px; margin-bottom:16px; }
-.price-now { font-size:34px; font-weight:700; color:#fff; }
-.price-old { font-size:15px; color:#8a95a6; text-decoration:line-through; margin-left:12px; }
-.badge { font-size:14px; font-weight:700; color:#fff; background:#e5484d; padding:2px 8px;
+            background:$panel2; border-radius:10px; padding:14px 18px; margin-bottom:16px; }
+.price-now { font-size:34px; font-weight:700; color:$price_text; }
+.price-old { font-size:15px; color:$dim2; text-decoration:line-through; margin-left:12px; }
+.badge { font-size:14px; font-weight:700; color:$white; background:$red; padding:2px 8px;
          border-radius:6px; margin-left:10px; }
-.trend { font-size:13px; color:#9aa6b8; }
+.trend { font-size:13px; color:$muted2; }
 .title-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
 .title { font-size:32px; font-weight:700; line-height:1.2; }
-.title-en { font-size:14px; color:#8794a8; margin-top:6px; }
-.scorebox { background:#f08a24; border-radius:10px; padding:8px 14px; text-align:center; flex:none; }
-.scorebox .s { font-size:26px; font-weight:700; color:#fff; line-height:1; }
-.scorebox .c { font-size:11px; color:#fff9; margin-top:4px; }
+.title-en { font-size:14px; color:$dim; margin-top:6px; }
+.scorebox { background:$orange; border-radius:10px; padding:8px 14px; text-align:center; flex:none; }
+.scorebox .s { font-size:26px; font-weight:700; color:$white; line-height:1; }
+.scorebox .c { font-size:11px; color:rgba(255,255,255,0.62); margin-top:4px; }
 .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
-.chip { font-size:13px; color:#c8d3e2; background:#22262e; border:1px solid #2e3540;
+.chip { font-size:13px; color:$text3; background:$panel2; border:1px solid $chip_border;
         padding:5px 12px; border-radius:7px; }
-.chip.plat { color:#fff; background:#2a3340; }
+.chip.plat { color:$chip_plat_text; background:$chip_plat_bg; }
 .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px; }
-.cell { background:#1d2129; border-radius:10px; padding:12px 10px; text-align:center; }
-.cell .v { font-size:19px; font-weight:700; color:#e9eef6; }
-.cell .l { font-size:12px; color:#7f8da2; margin-top:5px; }
-.meta { margin-top:14px; padding-top:12px; border-top:1px solid #262b34;
-         display:flex; flex-wrap:wrap; gap:6px 22px; font-size:12.5px; color:#9aa6b8; }
-.meta b { color:#dfe7f2; font-weight:600; }
+.cell { background:$panel; border-radius:10px; padding:12px 10px; text-align:center; }
+.cell .v { font-size:19px; font-weight:700; color:$text; }
+.cell .l { font-size:12px; color:$label; margin-top:5px; }
+.meta { margin-top:14px; padding-top:12px; border-top:1px solid $border;
+         display:flex; flex-wrap:wrap; gap:6px 22px; font-size:12.5px; color:$muted2; }
+.meta b { color:$text2; font-weight:600; }
 .pricegrid { display:grid; grid-template-columns:1.05fr 1.55fr 1.2fr; gap:10px; margin-top:14px; }
-.pcol { background:#1d2129; border-radius:10px; padding:12px 14px; }
-.pcol h3 { font-size:12px; color:#7f8da2; font-weight:600; margin-bottom:8px; letter-spacing:1px; }
-.pbig { font-size:24px; font-weight:700; color:#4ade80; line-height:1.1; }
-.pmeta { font-size:11.5px; color:#7f8da2; margin-top:4px; }
-.prow { display:flex; justify-content:space-between; font-size:12px; color:#b9c5d6; padding:3px 0; }
-.prow .dis { color:#ff8a8a; font-weight:600; }
-.req { margin-top:12px; background:#1d2129; border-radius:10px; padding:11px 16px 12px; }
-.req h4 { font-size:12px; color:#7f8da2; font-weight:600; margin-bottom:6px; letter-spacing:1px; }
+.pcol { background:$panel; border-radius:10px; padding:12px 14px; }
+.pcol h3 { font-size:12px; color:$label; font-weight:600; margin-bottom:8px; letter-spacing:1px; }
+.pbig { font-size:24px; font-weight:700; color:$green; line-height:1.1; }
+.pmeta { font-size:11.5px; color:$label; margin-top:4px; }
+.prow { display:flex; justify-content:space-between; font-size:12px; color:$text4; padding:3px 0; }
+.prow .dis { color:$red_soft; font-weight:600; }
+.req { margin-top:12px; background:$panel; border-radius:10px; padding:11px 16px 12px; }
+.req h4 { font-size:12px; color:$label; font-weight:600; margin-bottom:6px; letter-spacing:1px; }
 .req-cols { display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
-.req-col h5 { font-size:12.5px; color:#aab6c8; font-weight:700; margin:0 0 5px; }
+.req-col h5 { font-size:12.5px; color:$muted; font-weight:700; margin:0 0 5px; }
 .req-list { display:block; }
-.req-row { display:flex; gap:6px; font-size:12px; line-height:1.55; padding:2px 0; color:#b9c5d6; }
-.req-k { color:#7b8798; flex:none; min-width:52px; }
+.req-row { display:flex; gap:6px; font-size:12px; line-height:1.55; padding:2px 0; color:$text4; }
+.req-k { color:$label2; flex:none; min-width:52px; }
 .req-v { flex:1; }
-.req .none { color:#6d7889; font-size:13px; }
-.intro { margin-top:12px; font-size:13.5px; color:#b3bfd0; line-height:1.8; }
-.footer { display:flex; justify-content:space-between; font-size:12px; color:#5e6a7c;
-          margin-top:16px; padding-top:12px; border-top:1px solid #262b34; }
+.req .none { color:$faint; font-size:13px; }
+.intro { margin-top:12px; font-size:13.5px; color:$text4b; line-height:1.8; }
+.footer { display:flex; justify-content:space-between; font-size:12px; color:$faint3;
+          margin-top:16px; padding-top:12px; border-top:1px solid $border; }
 """
+
+
+from string import Template
+
+THEMES = {
+    "dark": {
+        "card_bg": "#17191e", "panel": "#1d2129", "panel2": "#22262e",
+        "border": "#262b34", "chip_border": "#2e3540", "chip_plat_bg": "#2a3340",
+        "text": "#e9eef6", "text2": "#dfe7f2", "text3": "#c8d3e2", "text3b": "#c7d2e0",
+        "text4": "#b9c5d6", "text4b": "#b3bfd0", "muted": "#aab6c8", "muted2": "#9aa6b8",
+        "dim": "#8794a8", "dim2": "#8a95a6", "label": "#7f8da2", "label2": "#7b8798",
+        "faint": "#6d7889", "faint2": "#67758a", "faint3": "#5e6a7c",
+        "price": "#ffcc66", "price_bg1": "#2a2113", "price_bg2": "#1d1a14",
+        "price_border": "#4a3a1c", "green": "#4ade80", "red": "#e5484d",
+        "red_soft": "#ff8a8a", "orange": "#f08a24", "img_bg": "#0f1116",
+        "white": "#fff", "price_text": "#ffffff", "chip_plat_text": "#ffffff",
+    },
+    "light": {
+        "card_bg": "#ffffff", "panel": "#f4f6f9", "panel2": "#eef1f5",
+        "border": "#e4e7ec", "chip_border": "#dde2e8", "chip_plat_bg": "#e8edf4",
+        "text": "#15181d", "text2": "#20242b", "text3": "#2f3540", "text3b": "#333a45",
+        "text4": "#3b4250", "text4b": "#404856", "muted": "#4b5361", "muted2": "#5b6472",
+        "dim": "#666e7c", "dim2": "#6b7381", "label": "#6b7280", "label2": "#707885",
+        "faint": "#8a92a0", "faint2": "#8d95a2", "faint3": "#9aa1ad",
+        "price": "#b45309", "price_text": "#8a4b08", "chip_plat_text": "#2f3540", "price_bg1": "#fff8e8", "price_bg2": "#fffdf6",
+        "price_border": "#f0dcb0", "green": "#15803d", "red": "#d92d20",
+        "red_soft": "#ef4444", "orange": "#ea7c1f", "img_bg": "#e9edf2",
+        "white": "#fff",
+    },
+}
+
+
+def theme_css(template: str, theme: str = "dark") -> str:
+    """把 CSS 里的 $token 换成对应主题的颜色。"""
+    return Template(template).substitute(**THEMES.get(theme, THEMES["dark"]))
 
 
 def _esc(value: Any) -> str:
     return html.escape(str(value or ""))
 
 
-def render_html(card: CardData) -> str:
+def render_html(card: CardData, theme: str = "dark") -> str:
     if card.is_free:
         price_html = '<span class="price-now">免费</span>'
     else:
@@ -408,7 +443,7 @@ def render_html(card: CardData) -> str:
     )
     cover_html = f'<img class="cover" src="{_esc(card.cover)}" />' if card.cover else ""
 
-    return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>{CSS}</style></head>
+    return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>{theme_css(CSS, theme)}</style></head>
 <body><div id="card">
   {cover_html}
   <div class="body">
@@ -431,39 +466,39 @@ def render_html(card: CardData) -> str:
 PRICE_CSS = """
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:transparent; font-family:'WenQuanYi Zen Hei','Noto Sans CJK SC',sans-serif; }
-#price-card { width:760px; background:#17191e; color:#e9eef6; border-radius:18px; overflow:hidden;
-              border:1px solid #262b34; padding:22px; }
+#price-card { width:760px; background:$card_bg; color:$text; border-radius:18px; overflow:hidden;
+              border:1px solid $border; padding:22px; }
 .head { display:flex; gap:16px; align-items:center; }
-.head img { width:150px; height:84px; object-fit:cover; border-radius:10px; background:#0f1116; }
+.head img { width:150px; height:84px; object-fit:cover; border-radius:10px; background:$img_bg; }
 .head .name { font-size:26px; font-weight:700; }
-.head .sub { font-size:12.5px; color:#8794a8; margin-top:5px; }
+.head .sub { font-size:12.5px; color:$dim; margin-top:5px; }
 .big { display:flex; align-items:baseline; gap:14px; margin-top:18px;
-       background:linear-gradient(135deg,#2a2113,#1d1a14); border:1px solid #4a3a1c;
+       background:linear-gradient(135deg,$price_bg1,$price_bg2); border:1px solid $price_border;
        border-radius:12px; padding:16px 20px; }
-.big .now { font-size:44px; font-weight:700; color:#ffcc66; }
-.big .old { font-size:17px; color:#8a95a6; text-decoration:line-through; }
-.big .off { font-size:15px; font-weight:700; color:#fff; background:#e5484d; padding:3px 10px; border-radius:7px; }
-.big .tag { font-size:12.5px; color:#9aa6b8; margin-left:auto; }
-.section { margin-top:14px; background:#1d2129; border-radius:12px; padding:14px 16px; }
-.section h3 { font-size:13px; color:#7f8da2; font-weight:600; margin-bottom:10px; letter-spacing:1px; }
+.big .now { font-size:44px; font-weight:700; color:$price; }
+.big .old { font-size:17px; color:$dim2; text-decoration:line-through; }
+.big .off { font-size:15px; font-weight:700; color:$white; background:$red; padding:3px 10px; border-radius:7px; }
+.big .tag { font-size:12.5px; color:$muted2; margin-left:auto; }
+.section { margin-top:14px; background:$panel; border-radius:12px; padding:14px 16px; }
+.section h3 { font-size:13px; color:$label; font-weight:600; margin-bottom:10px; letter-spacing:1px; }
 .lowrow { display:flex; align-items:center; gap:16px; }
-.lowrow .p { font-size:30px; font-weight:700; color:#4ade80; }
-.lowrow .m { font-size:13px; color:#9aa6b8; line-height:1.8; }
-.sale { display:flex; justify-content:space-between; font-size:13px; color:#c7d2e0;
-        padding:6px 0; border-bottom:1px dashed #262b34; }
+.lowrow .p { font-size:30px; font-weight:700; color:$green; }
+.lowrow .m { font-size:13px; color:$muted2; line-height:1.8; }
+.sale { display:flex; justify-content:space-between; font-size:13px; color:$text3b;
+        padding:6px 0; border-bottom:1px dashed $border; }
 .sale:last-child { border-bottom:none; }
-.sale .d { color:#ff8a8a; font-weight:600; }
-.empty { font-size:13px; color:#6d7889; }
+.sale .d { color:$red_soft; font-weight:600; }
+.empty { font-size:13px; color:$faint; }
 .regions { display:grid; grid-template-columns:1fr 1fr; gap:0 26px; }
 .reg { display:flex; justify-content:space-between; font-size:13px; padding:5px 0;
-       border-bottom:1px dashed #262b34; color:#c7d2e0; }
-.reg .cc { color:#67758a; font-size:11px; margin-left:6px; }
-.footer { display:flex; justify-content:space-between; font-size:12px; color:#5e6a7c;
-          margin-top:16px; padding-top:12px; border-top:1px solid #262b34; }
+       border-bottom:1px dashed $border; color:$text3b; }
+.reg .cc { color:$faint2; font-size:11px; margin-left:6px; }
+.footer { display:flex; justify-content:space-between; font-size:12px; color:$faint3;
+          margin-top:16px; padding-top:12px; border-top:1px solid $border; }
 """
 
 
-def render_price_html(card: CardData) -> str:
+def render_price_html(card: CardData, theme: str = "dark") -> str:
     """独立的详细价格卡片。"""
     if card.is_free:
         price_html = '<span class="now">免费</span>'
@@ -508,7 +543,7 @@ def render_price_html(card: CardData) -> str:
     ) or '<div class="empty">暂无跨区数据</div>'
 
     cover = f'<img src="{_esc(card.cover)}" />' if card.cover else ""
-    return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>{PRICE_CSS}</style></head>
+    return f"""<!DOCTYPE html><html><head><meta charset="utf-8"><style>{theme_css(PRICE_CSS, theme)}</style></head>
 <body><div id="price-card">
   <div class="head">{cover}
     <div><div class="name">{_esc(card.name)}</div>

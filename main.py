@@ -182,7 +182,7 @@ class HeyboxGamePlugin(Star):
                 int(self._cfg("intro_length", 220)),
                 str(self._cfg("req_mode", "compact")),
             )
-            html = render_html(card)
+            html = render_html(card, str(self._cfg("theme", "dark")))
             png = await render_png(html, int(self._cfg("render_width", 760)), float(self._cfg("render_scale", 2.0)))
             cache_dir = self.data_dir / "cache"
             cache_dir.mkdir(parents=True, exist_ok=True)
@@ -254,7 +254,7 @@ class HeyboxGamePlugin(Star):
                 "off",
                 int(self._cfg("price_sales_limit", 8)),
             )
-            html = render_price_html(card)
+            html = render_price_html(card, str(self._cfg("theme", "dark")))
             png = await render_png(html, int(self._cfg("render_width", 760)), float(self._cfg("render_scale", 2.0)))
             cache_dir = self.data_dir / "cache"
             cache_dir.mkdir(parents=True, exist_ok=True)

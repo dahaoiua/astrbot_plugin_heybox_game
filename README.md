@@ -60,6 +60,7 @@ python -m playwright install chromium
 
 | 字段 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
+| `theme` | select | dark | dark-暗色；light-亮色 |
 | `cookies` | text | 空 | `user_pkey=xxx; heybox_id=123`，留空则用扫码登录保存的凭证 |
 | `show_requirements` | bool | true | 显示配置要求（来自小黑盒硬件配置接口） |
 | `steam_requirements` | bool | false | 小黑盒拿不到时是否用 Steam 兜底（需代理，可选） |

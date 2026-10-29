@@ -103,5 +103,16 @@
     "description": "价格卡片的促销记录条数",
     "type": "int",
     "default": 8
+  },
+  "theme": {
+    "description": "卡片主题",
+    "type": "string",
+    "default": "dark",
+    "hint": "dark-暗色（默认）；light-亮色",
+    "_special": "select",
+    "options": [
+      "dark",
+      "light"
+    ]
   }
 }
